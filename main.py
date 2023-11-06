@@ -5,6 +5,8 @@ addrs = psutil.net_if_addrs()
 NICs = addrs.keys()
 NICsList = list(NICs)
 
+runSniff = False
+
 def choiceMaker(count, start=0, prompt="Enter your selection"):
     print(prompt)
     try:
@@ -34,8 +36,45 @@ def selectNIC(list):
 def sniffInterface(interface):
     print("====================================================")
     print(f"\nSniffing interface: {interface}")
-    sniff(iface=interface, prn=lambda x:x.show(), count=1)
+    sniff(iface=interface, prn=lambda x:x.summary(), stop_filter=stopSniff)
+
+def stopSniff(x):
+    # print("This is the variable from stop_filter " + x)
+    return not runSniff
+
+class ScreenBuffer:
+    o_buffer = []
+    
+    @classmethod
+    def buff(cls, input):
+        cls.o_buffer.append(input)
+
+    @classmethod    
+    def buffl(cls, input):
+        cls.o_buffer.append(input+"\n")
+
+    @classmethod
+    def render(cls):
+        output = ""
+        for line in cls.o_buffer:
+            output+=line
+        print(output)
+
 
 # print (NICsList)
-sniffInterface(selectNIC(NICsList))
+
+sb = ScreenBuffer
+sb.buff("This is bread")
+sb.buffl("This is bread that makes a new line")
+sb.render()
+
+NICChoice = selectNIC(NICsList)
+runSniff = True
+threading.Thread(target=lambda: sniffInterface(NICChoice)).start()
+
+exit = False
+input("Press enter to stop sniffing")
+runSniff=False
+
+
 
